@@ -50,12 +50,25 @@ python preprocess.py
 ```
 *(This builds precomputed matrices in `data_cache/` so the Flask server boots in under 1 second with instant response times.)*
 
-### 3. Launch the Web Application
+### 3. Launch the Application
+
+#### Option A: Run Full-Stack React + Flask Unified
 ```bash
 python app.py
 ```
-Open your browser and navigate to:
-👉 **[http://127.0.0.1:5001](http://127.0.0.1:5001)**
+Open your browser at 👉 **[http://127.0.0.1:5001](http://127.0.0.1:5001)** (serves the production React SPA build).
+
+#### Option B: Run React Vite Dev Server (with Hot Module Replacement)
+In terminal 1 (Flask API backend):
+```bash
+python app.py
+```
+In terminal 2 (Vite React frontend):
+```bash
+cd client
+npm run dev
+```
+Open your browser at 👉 **[http://localhost:3000](http://localhost:3000)**.
 
 ---
 

@@ -1,0 +1,11 @@
+{
+  "name": "book-recommendation-system",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Libraria - Intelligent Book Recommendation System with React Frontend and Flask Backend",
+  "scripts": {
+    "dev": "npm --prefix client run dev",
+    "build": "npm --prefix client run build",
+    "start": "python app.py"
+  }
+}
