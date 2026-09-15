@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block title %}The Grand Athenaeum | Top 50 Masterpieces — Libraria{% endblock %}
+
+{% block content %}
+<!-- Curator's Spotlight Hero Section -->
+<section class="hero-spotlight">
+  <div class="spotlight-frame">
+    <div class="hero-editorial-left">
+      <div class="hero-pill-tag">
+        ✦ The Curator's Archive • Edition 2026 ✦
+      </div>
+      <h1 class="hero-headline">
+        Where Timeless Stories <em>Resonate Across Generations</em>
+      </h1>
+      <p class="hero-dek">
+        Enter an algorithmic sanctuary curated from over 1.1 million reader assessments. Uncover fifty towering literary triumphs distinguished by narrative power and critical reverence.
+      </p>
+
+      <div class="hero-stats-row">
+        <div class="hero-stat-block">
+          <span class="stat-metric">270,000+</span>
+          <span class="stat-desc">Rare &amp; Classic Volumes</span>
+        </div>
+        <div class="hero-stat-block">
+          <span class="stat-metric">1,149,000+</span>
+          <span class="stat-desc">Reader Assessments</span>
+        </div>
+        <div class="hero-stat-block">
+          <span class="stat-metric">278,000+</span>
+          <span class="stat-desc">Global Bibliophiles</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3D Interactive Spotlight Centerpiece -->
+    <div class="hero-spotlight-book">
+      {% set spotlight = books[0] if books else None %}
+      {% if spotlight %}
+      <div class="spotlight-book-card" onclick="openBookModalFromData('{{ spotlight.Book_Title | escape }}', '{{ spotlight.Book_Author | escape }}', '{{ spotlight.Publisher | escape }}', '{{ spotlight.Year }}', '{{ spotlight.ISBN }}', '{{ spotlight.avg_rating }}', '{{ spotlight.Image_URL_L or spotlight.Image_URL_M }}')">
+        <div class="bookmark-ribbon"></div>
+        <div class="spotlight-cover-wrap">
+          <img src="{{ spotlight.Image_URL_L or spotlight.Image_URL_M }}" 
+               alt="{{ spotlight.Book_Title }}" 
+               class="spotlight-cover-img"
+               onerror="handleImageError(this, '{{ spotlight.Book_Title | escape }}')">
+        </div>
+        <div class="spotlight-curator-label">
+          ★ #1 Highest Rated Masterpiece
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+<!-- Controls & Filter Bar -->
+<section class="controls-panel">
+  <div class="controls-row">
+    <div class="collection-heading-group">
+      <span class="collection-tagline">Permanent Exhibition</span>
+      <h2 class="collection-title">The Top 50 Bestselling Masterpieces</h2>
+    </div>
+
+    <div class="controls-interactive-group">
+      <!-- Search Input -->
+      <div class="search-lux-wrap">
+        <svg class="search-lux-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input type="text" id="liveFilterInput" class="search-lux-input" placeholder="Search title, author, year...">
+      </div>
+
+      <!-- View Switcher (Gallery vs Bookshelf) -->
+      <div class="view-mode-switcher">
+        <button type="button" class="view-btn active" id="galleryViewBtn" onclick="switchViewMode('gallery')">
+          <svg viewBox="0 0 24 24"><path d="M4 4h4v4H4zm6 0h4v4h-4zm6 0h4v4h-4zM4 10h4v4H4zm6 0h4v4h-4zm6 0h4v4h-4zM4 16h4v4H4zm6 0h4v4h-4zm6 0h4v4h-4z"/></svg>
+          Gallery View
+        </button>
+        <button type="button" class="view-btn" id="bookshelfViewBtn" onclick="switchViewMode('bookshelf')">
+          <svg viewBox="0 0 24 24"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9H9V9h10v2zm-4 4H9v-2h6v2zm4-8H9V5h10v2z"/></svg>
+          Library Shelf
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mood & Theme Filter Chips -->
+  <div class="mood-chips-bar" id="moodFilterBar">
+    <button type="button" class="mood-chip active" onclick="filterByMood('all', this)">All Masterpieces (50)</button>
+    <button type="button" class="mood-chip" onclick="filterByMood('fantasy', this)">Epic Fantasy &amp; Lore</button>
+    <button type="button" class="mood-chip" onclick="filterByMood('classics', this)">Philosophy &amp; Society</button>
+    <button type="button" class="mood-chip" onclick="filterByMood('mystery', this)">Mystery &amp; Suspense</button>
+    <button type="button" class="mood-chip" onclick="filterByMood('human', this)">Memoir &amp; Human Spirit</button>
+  </div>
+</section>
+
+<!-- 3D Books Showcase -->
+<section class="books-container">
+  <div class="books-gallery-grid" id="booksDisplayGrid">
+    {% for book in books %}
+    <article class="hardcover-card" 
+             data-title="{{ book.Book_Title }}" 
+             data-author="{{ book.Book_Author }}"
+             data-publisher="{{ book.Publisher }}"
+             data-year="{{ book.Year }}"
+             data-isbn="{{ book.ISBN }}"
+             data-rating="{{ book.avg_rating }}"
+             data-votes="{{ book.num_ratings }}"
+             data-cover="{{ book.Image_URL_L or book.Image_URL_M }}"
+             onclick="openBookModal(this)">
+      
+      <div class="gold-rank-stamp">#{{ loop.index }}</div>
+
+      <div class="book-jacket">
+        <img src="{{ book.Image_URL_M }}" 
+             alt="{{ book.Book_Title }}" 
+             class="book-jacket-img" 
+             loading="lazy"
+             onerror="handleImageError(this, '{{ book.Book_Title | escape }}')">
+      </div>
+
+      <div class="card-content">
+        <h3 class="card-title" title="{{ book.Book_Title }}">{{ book.Book_Title }}</h3>
+        <p class="card-author">by {{ book.Book_Author }}</p>
+
+        <div class="card-footer">
+          <div class="rating-gauge">
+            <svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+            <span>{{ book.avg_rating }} / 10</span>
+          </div>
+          <span class="review-tally">{{ book.num_ratings }} evaluations</span>
+        </div>
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+
+  <div id="noResultsNotice" style="display: none; text-align: center; padding: 5rem 1rem; color: var(--text-muted);">
+    <p style="font-family: var(--font-editorial); font-size: 2rem; color: var(--gold-bright);">No literary works matched your query.</p>
+    <p style="font-size: 0.95rem; margin-top: 0.6rem; color: var(--text-champagne);">Try adjusting your search terms or select another collection filter.</p>
+  </div>
+</section>
+{% endblock %}

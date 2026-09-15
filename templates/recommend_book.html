@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block title %}Item-Based Collaborative Oracle | Libraria{% endblock %}
+
+{% block content %}
+<section class="oracle-workbench">
+  <div class="collection-heading-group" style="margin-bottom: 2rem;">
+    <span class="collection-tagline">High-Dimensional Similarity Engine</span>
+    <h1 class="collection-title">Item-Based Collaborative Oracle</h1>
+  </div>
+
+  <!-- Gilded Search Pedestal -->
+  <div class="oracle-card">
+    <form class="oracle-form" id="bookRecommendForm" method="POST" action="{{ url_for('recommend_book_view') }}">
+      <label class="oracle-label" for="bookSearchInput">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="url(#goldGradientFill)">
+          <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+        </svg>
+        Select or Enter Your Reference Masterpiece:
+      </label>
+
+      <div class="oracle-input-bar">
+        <input type="text" 
+               name="book_name" 
+               id="bookSearchInput" 
+               class="oracle-input" 
+               placeholder="Search by title (e.g., 1984, The Da Vinci Code, Harry Potter...)" 
+               autocomplete="off"
+               value="{{ selected_book or '' }}"
+               required>
+
+        <button type="submit" class="btn-gilded" id="recommendSubmitBtn">
+          <span>Consult the Oracle</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42L16.86 11H5v2z"/>
+          </svg>
+        </button>
+
+        <!-- Live Autocomplete Menu -->
+        <div class="autocomplete-lux" id="bookAutocompleteList"></div>
+      </div>
+
+      <!-- Quick Inspiration Pills -->
+      <div style="display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; margin-top: 0.5rem;">
+        <span class="pills-label">Notable Classics:</span>
+        <button type="button" class="gilded-pill" onclick="selectSuggestion('1984')">1984</button>
+        <button type="button" class="gilded-pill" onclick="selectSuggestion('The Da Vinci Code')">The Da Vinci Code</button>
+        <button type="button" class="gilded-pill" onclick="selectSuggestion('The Hobbit : The Enchanting Prelude to The Lord of the Rings')">The Hobbit</button>
+        <button type="button" class="gilded-pill" onclick="selectSuggestion('The Catcher in the Rye')">The Catcher in the Rye</button>
+        <button type="button" class="gilded-pill" onclick="selectSuggestion('To Kill a Mockingbird')">To Kill a Mockingbird</button>
+        <button type="button" class="gilded-pill" onclick="selectSuggestion('Angels &amp; Demons')">Angels &amp; Demons</button>
+        <button type="button" class="gilded-pill" onclick="selectSuggestion('Harry Potter and the Chamber of Secrets (Book 2)')">Harry Potter</button>
+        <button type="button" class="gilded-pill" onclick="selectSuggestion('The Fellowship of the Ring (The Lord of the Rings, Part 1)')">The Fellowship of the Ring</button>
+      </div>
+    </form>
+  </div>
+</section>
+
+<!-- Selected Reference & Recommendations Display -->
+{% if selected_book %}
+<section class="books-container">
+  {% if error_message %}
+    <div style="background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.35); padding: 1.8rem; border-radius: 16px; color: #fca5a5; margin-bottom: 2rem;">
+      <h3 style="font-family: var(--font-editorial); font-size: 1.5rem; margin-bottom: 0.5rem;">Volume Not Found</h3>
+      <p>{{ error_message }}</p>
+    </div>
+  {% else %}
+    <!-- Chosen Reference Banner -->
+    <div class="reference-banner">
+      <img src="{{ query_book_meta.image_url_l or query_book_meta.image_url }}" 
+           alt="{{ query_book_meta.title }}" 
+           class="reference-cover"
+           onerror="handleImageError(this, '{{ query_book_meta.title | escape }}')">
+      <div>
+        <div style="font-size: 0.76rem; color: var(--gold-bright); text-transform: uppercase; letter-spacing: 2px; font-weight: 700; margin-bottom: 0.4rem;">
+          Chosen Literary Compass
+        </div>
+        <h2 style="font-family: var(--font-editorial); font-size: 2.2rem; color: var(--text-pure); margin-bottom: 0.4rem; line-height: 1.2;">
+          {{ query_book_meta.title }}
+        </h2>
+        <p style="color: var(--text-champagne); font-size: 1.05rem;">
+          by <em>{{ query_book_meta.author }}</em> • Published by {{ query_book_meta.publisher }} ({{ query_book_meta.year }})
+        </p>
+      </div>
+    </div>
+
+    <!-- Recommendations Grid -->
+    <div style="display: flex; align-items: center; gap: 0.8rem; margin-bottom: 2rem;">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="var(--gold-bright)">
+        <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+      </svg>
+      <h2 style="font-family: var(--font-editorial); font-size: 2rem; color: var(--text-pure);">
+        Readers Who Revered This Work Also Cherished:
+      </h2>
+    </div>
+
+    <div class="books-gallery-grid">
+      {% for item in recommendations %}
+      <article class="hardcover-card" 
+               data-title="{{ item.title }}" 
+               data-author="{{ item.author }}"
+               data-publisher="{{ item.publisher }}"
+               data-year="{{ item.year }}"
+               data-isbn="{{ item.isbn }}"
+               data-rating="{{ item.similarity_pct }}% Affinity"
+               data-votes="Distance Metric: {{ item.distance }}"
+               data-cover="{{ item.image_url_l or item.image_url }}"
+               onclick="openBookModal(this)">
+        
+        <div class="gold-rank-stamp" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #fff;">
+          {{ item.similarity_pct }}% Match
+        </div>
+
+        <div class="book-jacket">
+          <img src="{{ item.image_url }}" 
+               alt="{{ item.title }}" 
+               class="book-jacket-img" 
+               loading="lazy"
+               onerror="handleImageError(this, '{{ item.title | escape }}')">
+        </div>
+
+        <div class="card-content">
+          <h3 class="card-title" title="{{ item.title }}">{{ item.title }}</h3>
+          <p class="card-author">by {{ item.author }}</p>
+
+          <div class="card-footer">
+            <span style="color: var(--gold-bright); font-size: 0.82rem; font-weight: 600;">
+              Cosine: {{ item.score }}
+            </span>
+            <span class="review-tally">{{ item.year }}</span>
+          </div>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+  {% endif %}
+</section>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  function selectSuggestion(title) {
+    const input = document.getElementById('bookSearchInput');
+    input.value = title;
+    document.getElementById('bookRecommendForm').submit();
+  }
+</script>
+{% endblock %}

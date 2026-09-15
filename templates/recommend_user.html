@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+
+{% block title %}Reader's Persona &amp; Taste Mirror | Libraria{% endblock %}
+
+{% block content %}
+<section class="oracle-workbench">
+  <div class="collection-heading-group" style="margin-bottom: 2rem;">
+    <span class="collection-tagline">Personalized Reading Twins Modeling</span>
+    <h1 class="collection-title">User-Based Collaborative Persona</h1>
+  </div>
+
+  <!-- Gilded Search Pedestal -->
+  <div class="oracle-card">
+    <form class="oracle-form" id="userRecommendForm" method="POST" action="{{ url_for('recommend_user_view') }}">
+      <label class="oracle-label" for="userIdInput">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="url(#goldGradientFill)">
+          <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+        </svg>
+        Enter Reader / Bibliophile Identification Number:
+      </label>
+
+      <div class="oracle-input-bar">
+        <input type="number" 
+               name="user_id" 
+               id="userIdInput" 
+               class="oracle-input" 
+               placeholder="Enter an active Reader ID (e.g., 254, 14, 16, 277427...)" 
+               value="{{ selected_user or '' }}"
+               required>
+
+        <button type="submit" class="btn-gilded" id="userSubmitBtn">
+          <span>Synthesize Taste Profile</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42L16.86 11H5v2z"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Sample Reader Profiles -->
+      <div style="display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; margin-top: 0.5rem;">
+        <span class="pills-label">Active Bibliophiles:</span>
+        <button type="button" class="gilded-pill" onclick="selectUserId(254)">Patron #254</button>
+        <button type="button" class="gilded-pill" onclick="selectUserId(14)">Patron #14</button>
+        <button type="button" class="gilded-pill" onclick="selectUserId(16)">Patron #16</button>
+        <button type="button" class="gilded-pill" onclick="selectUserId(277427)">Patron #277427</button>
+        <button type="button" class="gilded-pill" onclick="selectUserId(278418)">Patron #278418</button>
+        <button type="button" class="gilded-pill" onclick="selectUserId(6251)">Patron #6251</button>
+      </div>
+    </form>
+  </div>
+</section>
+
+<!-- Results Display -->
+{% if selected_user %}
+<section class="books-container">
+  {% if error_message %}
+    <div style="background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.35); padding: 1.8rem; border-radius: 16px; color: #fca5a5; margin-bottom: 2rem;">
+      <h3 style="font-family: var(--font-editorial); font-size: 1.5rem; margin-bottom: 0.5rem;">Patron Not Located</h3>
+      <p>{{ error_message }}</p>
+    </div>
+  {% else %}
+    <!-- Reader Dossier Banner -->
+    <div class="reference-banner">
+      <div class="brand-monogram" style="width: 70px; height: 70px; font-size: 2rem; flex-shrink: 0;">
+        ⚜
+      </div>
+      <div>
+        <div style="font-size: 0.76rem; color: var(--gold-bright); text-transform: uppercase; letter-spacing: 2px; font-weight: 700; margin-bottom: 0.4rem;">
+          Bibliophile Taste Profile Analyzed
+        </div>
+        <h2 style="font-family: var(--font-editorial); font-size: 2.2rem; color: var(--text-pure); margin-bottom: 0.4rem;">
+          Reader Dossier #{{ selected_user }}
+        </h2>
+        <p style="color: var(--text-champagne); font-size: 1.05rem;">
+          Vector mapped against {{ neighbor_count }} closest reading twins across the Book-Crossing universe.
+        </p>
+      </div>
+    </div>
+
+    <!-- Recommendations Grid -->
+    <div style="display: flex; align-items: center; gap: 0.8rem; margin-bottom: 2rem;">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="var(--gold-bright)">
+        <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+      </svg>
+      <h2 style="font-family: var(--font-editorial); font-size: 2rem; color: var(--text-pure);">
+        Customized Literary Predictions for Reader #{{ selected_user }}:
+      </h2>
+    </div>
+
+    <div class="books-gallery-grid">
+      {% for item in recommendations %}
+      <article class="hardcover-card" 
+               data-title="{{ item.title }}" 
+               data-author="{{ item.author }}" 
+               data-publisher="{{ item.publisher }}"
+               data-isbn="{{ item.isbn }}"
+               data-rating="{{ item.predicted_rating }} / 10 Predicted"
+               data-votes="Predicted Score: {{ item.predicted_rating }}"
+               data-cover="{{ item.image_url }}"
+               onclick="openBookModal(this)">
+        
+        <div class="gold-rank-stamp">
+          ★ {{ item.predicted_rating }}
+        </div>
+
+        <div class="book-jacket">
+          <img src="{{ item.image_url }}" 
+               alt="{{ item.title }}" 
+               class="book-jacket-img" 
+               loading="lazy"
+               onerror="handleImageError(this, '{{ item.title | escape }}')">
+        </div>
+
+        <div class="card-content">
+          <h3 class="card-title" title="{{ item.title }}">{{ item.title }}</h3>
+          <p class="card-author">by {{ item.author }}</p>
+
+          <div class="card-footer">
+            <div class="rating-gauge">
+              <svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+              <span>{{ item.predicted_rating }} / 10</span>
+            </div>
+            <span class="review-tally">{{ item.publisher }}</span>
+          </div>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+  {% endif %}
+</section>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  function selectUserId(id) {
+    const input = document.getElementById('userIdInput');
+    input.value = id;
+    document.getElementById('userRecommendForm').submit();
+  }
+</script>
+{% endblock %}
